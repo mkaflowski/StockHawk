@@ -1,6 +1,7 @@
 package com.udacity.stockhawk.data;
 
 
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -48,7 +49,6 @@ public final class Contract {
         static String getStockFromUri(Uri queryUri) {
             return queryUri.getLastPathSegment();
         }
-
 
     }
 

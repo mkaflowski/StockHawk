@@ -30,13 +30,13 @@ import au.com.bytecode.opencsv.CSVReader;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class StockDetailsActivity extends AppCompatActivity
-{
+public class StockDetailsActivity extends AppCompatActivity {
+    public static final String SYMBOL_EXTRA_KEY = "SYMBOL_EXTRA_KEY";
     public static final String[] PROJECTION = new String[]{Contract.Quote.COLUMN_SYMBOL,
             Contract.Quote.COLUMN_HISTORY};
-    public static final String SYMBOL_EXTRA_KEY = "SYMBOL_EXTRA_KEY";
 
-    @BindView(R.id.chart) LineChart chart;
+    @BindView(R.id.chart)
+    LineChart chart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,15 +50,17 @@ public class StockDetailsActivity extends AppCompatActivity
             stockSymbol = intentThatStartedThisActivity.getStringExtra(SYMBOL_EXTRA_KEY);
         }
 
-        drawChart(stockSymbol);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(stockSymbol);
+        }
 
-        getSupportActionBar().setTitle(stockSymbol);
+        drawChart(stockSymbol);
     }
 
-    private void drawChart(String stockSymbol){
+    private void drawChart(String stockSymbol) {
         final LinkedList<Long> xAxisData = new LinkedList<>();
         List<Entry> entries = getHistory(stockSymbol, xAxisData);
-        LineData lineData = new LineData(new LineDataSet(entries,stockSymbol));
+        LineData lineData = new LineData(new LineDataSet(entries, stockSymbol));
         chart.setData(lineData);
         XAxis xAxis = chart.getXAxis();
         xAxis.setTextColor(Color.RED);
@@ -66,14 +68,14 @@ public class StockDetailsActivity extends AppCompatActivity
         xAxis.setValueFormatter(new IAxisValueFormatter() {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                Date date = new Date(xAxisData.get((int)value) );
+                Date date = new Date(xAxisData.get((int) value));
                 return SimpleDateFormat.getDateInstance(DateFormat.SHORT,
                         getLocale()).format(date);
             }
         });
     }
 
-    private List<Entry> getHistory(String stockSymbol, final  LinkedList<Long> xAxis){
+    private List<Entry> getHistory(String stockSymbol, final LinkedList<Long> xAxis) {
         final LinkedList<Entry> entries = new LinkedList<>();
         String history = getHistoryString(stockSymbol);
 
@@ -82,10 +84,10 @@ public class StockDetailsActivity extends AppCompatActivity
 
         try {
             List<String[]> lines = csvReader.readAll();
-            for(int i = lines.size() - 1; i >= 0; i-- ){
+            for (int i = lines.size() - 1; i >= 0; i--) {
                 String[] line = lines.get(i);
                 xAxis.addFirst(Long.parseLong(line[0]));
-                Entry entry = new Entry(xAxisPosition++, Float.parseFloat(line[1]) );
+                Entry entry = new Entry(xAxisPosition++, Float.parseFloat(line[1]));
                 entries.add(entry);
             }
         } catch (IOException e) {
@@ -99,11 +101,11 @@ public class StockDetailsActivity extends AppCompatActivity
         Cursor cursor = getCursor(stockSymbol);
         String history = "";
 
-        if(cursor.moveToFirst()){
+        if (cursor.moveToFirst()) {
             history = cursor.getString(
                     cursor.getColumnIndex(Contract.Quote.COLUMN_HISTORY));
         }
-        if(!cursor.isClosed()){
+        if (!cursor.isClosed()) {
             cursor.close();
         }
 
@@ -119,7 +121,7 @@ public class StockDetailsActivity extends AppCompatActivity
 
     private Cursor getCursor(String stockSymbol) {
         return getContentResolver().query(Contract.Quote.makeUriForStock(stockSymbol),
-                PROJECTION,null,null,null);
+                PROJECTION, null, null, null);
     }
 
 }
