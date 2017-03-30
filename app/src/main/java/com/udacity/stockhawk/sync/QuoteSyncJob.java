@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -32,9 +34,11 @@ import yahoofinance.histquotes.Interval;
 import yahoofinance.quotes.stock.StockQuote;
 
 public final class QuoteSyncJob {
+    private static final String LOG_TAG = QuoteSyncJob.class.getSimpleName();
+
 
     private static final int ONE_OFF_ID = 2;
-    private static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
+    public static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
     private static final int PERIOD = 300000;
     private static final int INITIAL_BACKOFF = 10000;
     private static final int PERIODIC_ID = 1;
@@ -43,9 +47,10 @@ public final class QuoteSyncJob {
     private QuoteSyncJob() {
     }
 
-    static void getQuotes(Context context) {
+    static void getQuotes(final Context context) {
 
         Timber.d("Running sync job");
+        Log.d(LOG_TAG, "GET QUOTES");
 
         Calendar from = Calendar.getInstance();
         Calendar to = Calendar.getInstance();
@@ -76,12 +81,19 @@ public final class QuoteSyncJob {
 
 
                 Stock stock = quotes.get(symbol);
-                StockQuote quote = stock.getQuote();
-                if (quote == null || quote.getPrice() == null) {
-                    Timber.d("Stock not found");
+
+                StockQuote quote = (stock != null) ? stock.getQuote() : null;
+                if (quote == null || quote.getPrice() == null || quote.getChange() == null || quote.getChangeInPercent() == null) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, R.string.invalid_symbol, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    PrefUtils.removeStock(context, symbol);
                     continue;
                 }
-
                 float price = quote.getPrice().floatValue();
                 float change = quote.getChange().floatValue();
                 float percentChange = quote.getChangeInPercent().floatValue();
@@ -116,13 +128,17 @@ public final class QuoteSyncJob {
                     .bulkInsert(
                             Contract.Quote.URI,
                             quoteCVs.toArray(new ContentValues[quoteCVs.size()]));
-
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
             context.sendBroadcast(dataUpdatedIntent);
 
         } catch (IOException exception) {
             Timber.e(exception, "Error fetching stock quotes");
         }
+    }
+
+    public static void updateWidget(Context context) {
+        Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
+        context.sendBroadcast(dataUpdatedIntent);
     }
 
     private static void schedulePeriodic(Context context) {
@@ -174,6 +190,4 @@ public final class QuoteSyncJob {
 
         }
     }
-
-
 }

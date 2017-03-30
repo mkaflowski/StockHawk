@@ -35,5 +35,6 @@
     <string name="title_activity_stock_detail">StockDetailActivity</string>
     <string name="stock_list">Stock list</string>
     <string name="no_stocks_added">No stocks added</string>
+    <string name="invalid_symbol">Invalid symbol</string>
 
 </resources>
