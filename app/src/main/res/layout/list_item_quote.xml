@@ -12,7 +12,8 @@
         android:id="@+id/symbol"
         style="@style/StockSymbolTextStyle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="wrap_contentcontent"
+        android:textColor="#ffffff"        
         android:gravity="start|center_vertical"
         tools:text="GOOG" />
 
